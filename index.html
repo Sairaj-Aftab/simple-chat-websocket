@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+        *{
+            margin: 0;
+            padding: 0;
+            font-family: roboto;
+        }
+        img{
+            max-width: 100%;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgb(0, 233, 233);
+        }
+
+        .card{
+            width: 500px;
+            height: auto;
+            margin: 20px auto;
+            box-shadow: .5px .5px 10px #ddd;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .user{
+            display: flex;
+            gap: 10px;
+            margin: 8px 0;
+        }
+        .user.active{
+            display: flex;
+            gap: 10px;
+            margin: 8px 0;
+            justify-content: end;
+        }
+        .info{
+            background: #c0fcfcf6;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5px;
+            border-radius: 6px;
+        }
+        .info.active{
+            background: rgb(172, 172, 252);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5px;
+            border-radius: 6px;
+        }
+        .info .name{
+            font-weight: bold;
+        }
+        .msg-box{
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+        }
+        .msg-box input{
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            padding: 1px 3px;
+            width: 135px;
+        }
+        .msg-box button{
+            background: blue;
+            border-radius: 6px;
+            border: none;
+            color: #ffffff;
+            font-weight: 500;
+            padding: 1px 3px;
+            cursor: pointer;
+        }
+
+    </style>
+
+</head>
+<body>
+    
+    <div class="message">
+        <div class="card">
+            <div id="card"></div>
+            
+            <div class="msg-box">
+                <input id="name" type="text" placeholder="Name">
+                <input id="photo" type="text" placeholder="Photo">
+                <input id="message" type="text" placeholder="Message">
+                <button id="button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+
+        const socket = io();
+
+        const name = localStorage.getItem('chat-name')
+        socket.on('latestData', (data) => {
+
+            let chat = '';
+            data.forEach(item => {
+
+                if (name == item.name) {
+                    
+                    chat += `
+                    <div class="user active" id="user">
+                        <div class="info active">
+                            <div class="msg">${item.message}</div>
+                        </div>
+                        <img src="${item.photo}" alt="">
+                    </div>
+                    `
+
+                } else {
+                    chat += `
+                    <div class="user" id="user">
+                        <img src="${item.photo}" alt="">
+                        <div class="info">
+                            <div class="name">${item.name}</div>
+                            <div class="msg">${item.message}</div>
+                        </div>
+                    </div>
+                    `
+                }
+
+                
+            })
+
+            document.getElementById('card').innerHTML = chat;
+
+        })
+
+        document.getElementById('button').onclick = () => {
+
+            let name = document.getElementById('name').value;
+            let photo = document.getElementById('photo').value;
+            let message = document.getElementById('message').value;
+
+            // Send to LocalStorage
+            if ( !localStorage.getItem('chat-name') ) {
+                localStorage.setItem('chat-name', name)
+            }
+
+            // Send to socket
+            socket.emit('chat', {name, photo, message})
+
+            document.getElementById('message').value = ''
+        }
+
+    </script>
+</body>
+</html>
